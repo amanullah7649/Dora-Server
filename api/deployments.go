@@ -1,5 +1,3 @@
-// package main
-// for vercel deployment
 package handler
 
 import (
@@ -7,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -75,7 +74,27 @@ func handleDeployments(w http.ResponseWriter, r *http.Request, collection *mongo
 		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 
 	case "GET":
-		cursor, err := collection.Find(context.TODO(), bson.M{})
+		// Filter by query parameters
+		filter := bson.M{}
+		branch := r.URL.Query().Get("branch")
+		if branch != "" {
+			filter["branch"] = branch
+		}
+
+		limit := int64(0)
+		limitParam := r.URL.Query().Get("limit")
+		if limitParam != "" {
+			if l, err := strconv.Atoi(limitParam); err == nil {
+				limit = int64(l)
+			}
+		}
+
+		opts := options.Find().SetSort(bson.D{{"inserted_at", -1}})
+		if limit > 0 {
+			opts.SetLimit(limit)
+		}
+
+		cursor, err := collection.Find(context.TODO(), filter, opts)
 		if err != nil {
 			http.Error(w, "Failed to fetch data", http.StatusInternalServerError)
 			return
