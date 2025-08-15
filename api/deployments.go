@@ -3,9 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,39 +13,47 @@ import (
 )
 
 type Deployment struct {
-	Branch          string    `json:"branch"`
-	CommitHash      string    `json:"commit_hash"`
-	CommitMessage   string    `json:"commit_message"`
-	CommitDesc      string    `json:"commit_description"`
-	CommitDate      string    `json:"commit_date"`
-	AuthorName      string    `json:"author_name"`
-	AuthorEmail     string    `json:"author_email"`
-	BuildNumber     string    `json:"build_number"`
-	BuildURL        string    `json:"build_url"`
-	InsertedAt      time.Time `json:"inserted_at"`
+	Branch        string    `json:"branch"`
+	CommitHash    string    `json:"commit_hash"`
+	CommitMessage string    `json:"commit_message"`
+	CommitDesc    string    `json:"commit_description"`
+	CommitDate    string    `json:"commit_date"`
+	AuthorName    string    `json:"author_name"`
+	AuthorEmail   string    `json:"author_email"`
+	BuildNumber   string    `json:"build_number"`
+	BuildURL      string    `json:"build_url"`
+	InsertedAt    time.Time `json:"inserted_at"`
 }
 
-var collection *mongo.Collection
-
-func main() {
+func Handler(w http.ResponseWriter, r *http.Request) {
 	// MongoDB connection
-	serverName := "test"
-	mongoURI := "mongodb+srv://doramatrix:doramatrixpassword@cluster0.5ply0tk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" // Change this to your MongoDB URI if needed
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURI))
-	if err != nil {
-		log.Fatal("MongoDB connection error:", err)
+	mongoURI := os.Getenv("MONGODB_URI")
+	if mongoURI == "" {
+		http.Error(w, "MONGODB_URI not set", http.StatusInternalServerError)
+		return
 	}
 
-	collection = client.Database(fmt.Sprintf("%s_dora", serverName)).Collection("deployments")
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURI))
+	if err != nil {
+		http.Error(w, "MongoDB connection error", http.StatusInternalServerError)
+		return
+	}
+	defer client.Disconnect(context.TODO())
 
-	http.HandleFunc("/deployments", deploymentsHandler)
-	http.HandleFunc("/", projectStart)
+	db := client.Database("dora_db")
+	collection := db.Collection("deployments")
 
-	fmt.Println("Server running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	switch r.URL.Path {
+	case "/deployments":
+		handleDeployments(w, r, collection)
+	case "/":
+		handleRoot(w, r)
+	default:
+		http.Error(w, "Not Found", http.StatusNotFound)
+	}
 }
 
-func deploymentsHandler(w http.ResponseWriter, r *http.Request) {
+func handleDeployments(w http.ResponseWriter, r *http.Request, collection *mongo.Collection) {
 	switch r.Method {
 	case "POST":
 		var dep Deployment
@@ -87,15 +94,11 @@ func deploymentsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func projectStart(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-
-
-	case "GET":
+func handleRoot(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"message": "Welcome to the Dora Matrix Deployment API!"})
-
-	default:
+	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
