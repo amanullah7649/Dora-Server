@@ -31,7 +31,7 @@ var collection *mongo.Collection
 func main() {
 	// MongoDB connection
 	serverName := "test"
-	mongoURI :="mongodb+srv://doramatrix:doramatrixpassword@cluster0.5ply0tk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" // Change this to your MongoDB URI if needed
+	mongoURI := "mongodb+srv://doramatrix:doramatrixpassword@cluster0.5ply0tk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" // Change this to your MongoDB URI if needed
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		log.Fatal("MongoDB connection error:", err)
@@ -40,6 +40,7 @@ func main() {
 	collection = client.Database(fmt.Sprintf("%s_dora", serverName)).Collection("deployments")
 
 	http.HandleFunc("/deployments", deploymentsHandler)
+	http.HandleFunc("/", projectStart)
 
 	fmt.Println("Server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -80,6 +81,19 @@ func deploymentsHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(deployments)
+
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func projectStart(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+
+
+	case "GET":
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "Welcome to the Dora Matrix Deployment API!"})
 
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
