@@ -1,20 +1,22 @@
 package handler
 
 import (
-	"net/http"
 	"log"
+	"net/http"
 
 	"dora-server/pkg"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	if internal.MongoClient() == nil {
-		if err := internal.InitializeMongo(); err != nil {
+	// Initialize MongoDB if not already connected
+	if pkg.MongoClient() == nil {
+		if err := pkg.InitializeMongo(); err != nil {
 			log.Printf("DB init failed: %v", err)
 			http.Error(w, "Database connection error", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	internal.Handler(w, r)
+	// Call the main handler
+	pkg.Handler(w, r)
 }
