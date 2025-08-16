@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"dora-server/internal"
+	"dora-server/pkg"
 	"github.com/joho/godotenv"
 )
 

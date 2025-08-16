@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"log"
 
-	"dora-server/internal"
+	"dora-server/pkg"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
