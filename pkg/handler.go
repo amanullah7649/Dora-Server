@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Deployment model
 type Deployment struct {
 	CommitHash        string    `json:"commit_hash"`
 	CommitSubject     string    `json:"commit_subject"`
@@ -30,11 +31,11 @@ type Deployment struct {
 	InsertedAt        time.Time `json:"inserted_at"`
 }
 
-// Global client to reuse across requests
+// Global Mongo client and collection
 var mongoClient *mongo.Client
 var mongoCollection *mongo.Collection
 
-// InitializeMongo should be called once at server start
+// InitializeMongo initializes MongoDB connection (call once at server start)
 func InitializeMongo() error {
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
@@ -46,7 +47,6 @@ func InitializeMongo() error {
 		return fmt.Errorf("MongoDB connection error: %v", err)
 	}
 
-	// Ping to ensure DB is reachable
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := client.Ping(ctx, nil); err != nil {
@@ -56,6 +56,16 @@ func InitializeMongo() error {
 	mongoClient = client
 	mongoCollection = client.Database("dora_db").Collection("deployments")
 	return nil
+}
+
+// MongoClient returns the global MongoDB client
+func MongoClient() *mongo.Client {
+	return mongoClient
+}
+
+// MongoCollection returns the global collection
+func MongoCollection() *mongo.Collection {
+	return mongoCollection
 }
 
 // Handler is the main HTTP handler

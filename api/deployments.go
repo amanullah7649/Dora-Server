@@ -7,6 +7,7 @@ import (
 	"dora-server/pkg"
 )
 
+// HTTP wrapper for serverless/local usage
 func Handler(w http.ResponseWriter, r *http.Request) {
 	// Initialize MongoDB if not already connected
 	if pkg.MongoClient() == nil {
@@ -17,6 +18,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Call the main handler
+	// Call main handler
 	pkg.Handler(w, r)
 }
