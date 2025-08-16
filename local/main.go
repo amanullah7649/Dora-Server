@@ -16,7 +16,7 @@ func main() {
 	}
 
 	// Initialize MongoDB
-	if err := internal.InitializeMongo(); err != nil {
+	if err := pkg.InitializeMongo(); err != nil {
 		log.Fatalf("Failed to connect to DB: %v", err)
 	}
 
@@ -25,8 +25,8 @@ func main() {
 		port = "8080"
 	}
 
-	http.HandleFunc("/", internal.Handler)
-	http.HandleFunc("/deployments", internal.Handler)
+	http.HandleFunc("/", pkg.Handler)
+	http.HandleFunc("/deployments", pkg.Handler)
 
 	log.Printf("Local server running at http://localhost:%s\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
