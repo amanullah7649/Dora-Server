@@ -13,17 +13,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Deployment model aligned with Jenkins payload
 type Deployment struct {
-	Branch        string    `json:"branch"`
-	CommitHash    string    `json:"commit_hash"`
-	CommitMessage string    `json:"commit_message"`
-	CommitDesc    string    `json:"commit_description"`
-	CommitDate    string    `json:"commit_date"`
-	AuthorName    string    `json:"author_name"`
-	AuthorEmail   string    `json:"author_email"`
-	BuildNumber   string    `json:"build_number"`
-	BuildURL      string    `json:"build_url"`
-	InsertedAt    time.Time `json:"inserted_at"`
+	CommitHash       string    `json:"commit_hash"`
+	CommitSubject    string    `json:"commit_subject"`
+	CommitBody       string    `json:"commit_body"`
+	CommitTimestamp  string    `json:"commit_timestamp"`
+	CommitAuthor     string    `json:"commit_author"`
+	CommitAuthorEmail string   `json:"commit_author_email"`
+	ReleaseVersion   string    `json:"release_version"`
+	PreviousCommit   string    `json:"previous_commit"`
+	FilesChanged     string    `json:"files_changed"`
+	LinesChanged     string    `json:"lines_changed"`
+	JenkinsBuildNum  string    `json:"jenkins_build_number"`
+	JenkinsBuildURL  string    `json:"jenkins_build_url"`
+	InsertedAt       time.Time `json:"inserted_at"`
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -76,9 +80,9 @@ func handleDeployments(w http.ResponseWriter, r *http.Request, collection *mongo
 	case "GET":
 		// Filter by query parameters
 		filter := bson.M{}
-		branch := r.URL.Query().Get("branch")
-		if branch != "" {
-			filter["branch"] = branch
+		commitAuthor := r.URL.Query().Get("commit_author")
+		if commitAuthor != "" {
+			filter["commit_author"] = commitAuthor
 		}
 
 		limit := int64(0)
