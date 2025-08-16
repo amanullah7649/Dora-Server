@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Local Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/local",
+            "args": [],
+            "showLog": true,
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Debug All Packages",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": [],
+            "showLog": true,
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Debug All Tests",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/...",
+            "args": [],
+            "showLog": true,
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

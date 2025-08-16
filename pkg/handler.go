@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -28,6 +29,7 @@ type Deployment struct {
 	LinesChanged      string    `json:"lines_changed"`
 	JenkinsBuildNum   string    `json:"jenkins_build_number"`
 	JenkinsBuildURL   string    `json:"jenkins_build_url"`
+	DeploymentStatus  string    `json:"deployment_status"`
 	InsertedAt        time.Time `json:"inserted_at"`
 }
 
@@ -86,7 +88,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleDeployments(w http.ResponseWriter, r *http.Request) {
+
 	switch r.Method {
+
 	case "POST":
 		var dep Deployment
 		if err := json.NewDecoder(r.Body).Decode(&dep); err != nil {
@@ -95,6 +99,16 @@ func handleDeployments(w http.ResponseWriter, r *http.Request) {
 		}
 		dep.InsertedAt = time.Now()
 
+		commitSubject := dep.CommitSubject // ex: Merge pull request #4957 from charge-onsite/v1.0.718-main-service-alpha
+		releaseVersion := dep.ReleaseVersion
+		if releaseVersion == "" {
+			// split commit subject with '/' and take last part
+			parts := strings.Split(commitSubject, "/")
+			if len(parts) > 0 {
+				releaseVersion = parts[len(parts)-1]
+			}
+		}
+		dep.ReleaseVersion = releaseVersion
 		if _, err := mongoCollection.InsertOne(context.TODO(), dep); err != nil {
 			http.Error(w, "Failed to insert data", http.StatusInternalServerError)
 			return
@@ -102,6 +116,8 @@ func handleDeployments(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	
 
 	case "GET":
 		filter := bson.M{}
